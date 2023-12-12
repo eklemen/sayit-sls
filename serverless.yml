@@ -1,0 +1,46 @@
+org: eklemen
+app: sayit-sls
+service: sayit-sls
+frameworkVersion: '3'
+useDotenv: true
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  timeout: 15
+  environment:
+    DB_STRING: ${env:DB_STRING}
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "s3:GetObject"
+        - "s3:PutObject"
+        - "s3:DeleteObject"
+        - "s3:ListBucket"
+      Resource: "arn:aws:s3:::sayit-sls-audio/*"
+    - Effect: "Allow"
+      Action:
+        - "s3:ListBucket"
+      Resource: "arn:aws:s3:::sayit-sls-audio"
+
+functions:
+  api:
+    handler: index.handler
+    timeout: 15
+    events:
+      - httpApi: '*'
+
+resources:
+  Resources:
+    NewS3Bucket:
+      Type: 'AWS::S3::Bucket'
+      Properties:
+        BucketName: sayit-sls-audio
+
+plugins:
+  - serverless-plugin-typescript
+  - serverless-offline
+
+custom:
+  serverless-offline:
+    httpPort: 4000
